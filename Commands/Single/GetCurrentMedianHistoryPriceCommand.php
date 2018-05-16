@@ -1,7 +1,7 @@
 <?php
 
 
-namespace GrapheneNodeClient\Commands\Single;
+namespace GolosPHP\Commands\Single;
 
 
 class GetCurrentMedianHistoryPriceCommand extends CommandAbstract

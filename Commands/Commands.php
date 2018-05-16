@@ -1,10 +1,10 @@
 <?php
 
 
-namespace GrapheneNodeClient\Commands;
+namespace GolosPHP\Commands;
 
 
-use GrapheneNodeClient\Connectors\ConnectorInterface;
+use GolosPHP\Connectors\ConnectorInterface;
 
 /**
  * @method Commands broadcast_transaction()

@@ -25,11 +25,11 @@ install extensions
 ```php
 <?php
 
-use GrapheneNodeClient\Commands\CommandQueryData;
-use GrapheneNodeClient\Commands\Commands;
-use GrapheneNodeClient\Commands\Single\GetDiscussionsByCreatedCommand;
-use GrapheneNodeClient\Connectors\WebSocket\GolosWSConnector;
-use GrapheneNodeClient\Connectors\WebSocket\SteemitWSConnector;
+use GolosPHP\Commands\CommandQueryData;
+use GolosPHP\Commands\Commands;
+use GolosPHP\Commands\Single\GetDiscussionsByCreatedCommand;
+use GolosPHP\Connectors\WebSocket\GolosWSConnector;
+use GolosPHP\Connectors\WebSocket\SteemitWSConnector;
 
 
 //Set params for query
@@ -148,7 +148,7 @@ All single commands can be called through Commands Class as methods (example: (n
 
 ### broadcast operations templates
 
-namespace GrapheneNodeClient\Tools\ChainOperations
+namespace GolosPHP\Tools\ChainOperations
 
 - vote
 - transfer
@@ -157,9 +157,9 @@ namespace GrapheneNodeClient\Tools\ChainOperations
 ```php
 <?php
 
-use GrapheneNodeClient\Tools\ChainOperations\OpVote;
-use GrapheneNodeClient\Connectors\Http\SteemitHttpConnector;
-use GrapheneNodeClient\Connectors\WebSocket\GolosWSConnector;
+use GolosPHP\Tools\ChainOperations\OpVote;
+use GolosPHP\Connectors\Http\SteemitHttpConnector;
+use GolosPHP\Connectors\WebSocket\GolosWSConnector;
 
 $connector = new SteemitHttpConnector();
 //$connector = new GolosWSConnector();
@@ -191,7 +191,7 @@ $answer = OpVote::doSynchronous(
 
 ## Implemented Connectors List
 
-namespace: GrapheneNodeClient\Connectors\WebSocket OR GrapheneNodeClient\Connectors\Http;
+namespace: GolosPHP\Connectors\WebSocket OR GolosPHP\Connectors\Http;
 
 - GolosWSConnector (wss://ws.golos.io)
 - SteemitWSConnector (wss://steemd.minnowsupportproject.org)
@@ -204,9 +204,9 @@ List of available STEEM nodes are [here](https://www.steem.center/index.php?titl
 ```php
 <?php
 
-use GrapheneNodeClient\Commands\CommandQueryData;
-use GrapheneNodeClient\Commands\Single\GetContentCommand;
-use GrapheneNodeClient\Connectors\InitConnector;
+use GolosPHP\Commands\CommandQueryData;
+use GolosPHP\Commands\Single\GetContentCommand;
+use GolosPHP\Connectors\InitConnector;
 
 $command = new GetContentCommand(InitConnector::getConnector(InitConnector::PLATFORM_STEEMIT));
 
@@ -245,7 +245,7 @@ $content = $command->execute(
 
 namespace My\App\Connectors;
 
-use GrapheneNodeClient\Connectors\ConnectorInterface;
+use GolosPHP\Connectors\ConnectorInterface;
 
 class MyConnector implements ConnectorInterface 
 {
@@ -271,15 +271,15 @@ class MyConnector implements ConnectorInterface
 
 
 ```
-Or use GrapheneNodeClient\Connectors\WebSocket\WSConnectorAbstract for extending
+Or use GolosPHP\Connectors\WebSocket\WSConnectorAbstract for extending
 
 ```php
 <?php
 
 namespace My\App\Commands;
 
-use GrapheneNodeClient\Commands\Single\CommandAbstract;
-use GrapheneNodeClient\Connectors\ConnectorInterface;
+use GolosPHP\Commands\Single\CommandAbstract;
+use GolosPHP\Connectors\ConnectorInterface;
 
 class GolosWSConnector extends WSConnectorAbstract
 {
@@ -324,8 +324,8 @@ class GolosWSConnector extends WSConnectorAbstract
 
 namespace My\App\Commands;
 
-use GrapheneNodeClient\Commands\Single\CommandAbstract;
-use GrapheneNodeClient\Connectors\ConnectorInterface;
+use GolosPHP\Commands\Single\CommandAbstract;
+use GolosPHP\Connectors\ConnectorInterface;
 
 class MyCommand extends CommandAbstract 
 {
@@ -374,7 +374,7 @@ class MyCommand extends CommandAbstract
 ```php
 <?php
 
-use GrapheneNodeClient\Tools\Transliterator;
+use GolosPHP\Tools\Transliterator;
 
 
 //Encode tags
@@ -393,7 +393,7 @@ $tag = Transliterator::encode('ru--pol', Transliterator::LANG_RU); // return 'п
 ```php
 <?php
 
-use GrapheneNodeClient\Tools\Reputation;
+use GolosPHP\Tools\Reputation;
 
 $rep = Reputation::calculate($account['reputation']);
 
@@ -406,9 +406,9 @@ $rep = Reputation::calculate($account['reputation']);
 ```php
 <?php
 
-use GrapheneNodeClient\Tools\Transaction;
-use GrapheneNodeClient\Connectors\Http\SteemitHttpConnector;
-use GrapheneNodeClient\Connectors\WebSocket\GolosWSConnector;
+use GolosPHP\Tools\Transaction;
+use GolosPHP\Connectors\Http\SteemitHttpConnector;
+use GolosPHP\Connectors\WebSocket\GolosWSConnector;
 
 $connector = new SteemitHttpConnector();
 //$connector = new GolosWSConnector();

@@ -1,6 +1,6 @@
 <?php
 
-namespace GrapheneNodeClient\Connectors\Http;
+namespace GolosPHP\Connectors\Http;
 
 
 

@@ -1,8 +1,8 @@
 <?php
 
-namespace GrapheneNodeClient\Connectors\Http;
+namespace GolosPHP\Connectors\Http;
 
-use GrapheneNodeClient\Connectors\ConnectorInterface;
+use GolosPHP\Connectors\ConnectorInterface;
 
 
 abstract class HttpJsonRpcConnectorAbstract implements ConnectorInterface

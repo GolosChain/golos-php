@@ -1,12 +1,12 @@
 <?php
 
 
-namespace GrapheneNodeClient\Commands\Single;
+namespace GolosPHP\Commands\Single;
 
 
-use GrapheneNodeClient\Commands\CommandQueryDataInterface;
-use GrapheneNodeClient\Commands\Commands;
-use GrapheneNodeClient\Connectors\ConnectorInterface;
+use GolosPHP\Commands\CommandQueryDataInterface;
+use GolosPHP\Commands\Commands;
+use GolosPHP\Connectors\ConnectorInterface;
 
 abstract class CommandAbstract
 {

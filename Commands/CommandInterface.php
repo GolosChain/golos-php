@@ -1,7 +1,7 @@
 <?php
 
 
-namespace GrapheneNodeClient\Commands;
+namespace GolosPHP\Commands;
 
 
 interface CommandInterface
