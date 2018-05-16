@@ -1,6 +1,6 @@
 <?php
 
-namespace GolosPHP\Tools;
+namespace GrapheneNodeClient\Tools;
 
 use StephenHill\Base58;
 use t3ran13\ByteBuffer\ByteBuffer;

@@ -1,6 +1,6 @@
 <?php
 
-namespace GolosPHP\Tools\ChainOperations;
+namespace GrapheneNodeClient\Tools\ChainOperations;
 
 
 class ChainOperations

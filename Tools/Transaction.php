@@ -6,9 +6,9 @@ namespace GolosPHP\Tools;
 
 use GolosPHP\Commands\CommandQueryData;
 use GolosPHP\Commands\CommandQueryDataInterface;
-use GolosPHP\Commands\DataBase\GetBlockCommand;
-use GolosPHP\Commands\DataBase\GetDynamicGlobalPropertiesCommand;
-use GolosPHP\Commands\Login\LoginCommand;
+use GolosPHP\Commands\Single\GetBlockCommand;
+use GolosPHP\Commands\Single\GetDynamicGlobalPropertiesCommand;
+use GolosPHP\Commands\Single\LoginCommand;
 use GolosPHP\Connectors\ConnectorInterface;
 use GolosPHP\Tools\ChainOperations\OperationSerializer;
 use t3ran13\ByteBuffer\ByteBuffer;
@@ -43,28 +43,12 @@ class Transaction
         $tx = null;
         $chainName = $connector->getPlatform();
 
-        $command = new LoginCommand($connector);
-        $commandQueryData = new CommandQueryData();
-        $commandQueryData->setParams(
-            ['', '']
-        );
-        $isLogin = $command->execute(
-            $commandQueryData,
-            'result'
-        );
-
-        if ($isLogin === true) {
             $command = new GetDynamicGlobalPropertiesCommand($connector);
             $commandQueryData = new CommandQueryData();
             $properties = $command->execute(
                 $commandQueryData,
                 'result'
             );
-//            $properties = [
-//                'head_block_number'           => 17851646,
-//                'last_irreversible_block_num' => 17851627,
-//                'time'                        => '2017-12-06T15:29:00',
-//            ];
 
             if (self::CHAIN_GOLOS === $chainName) {
                 $blockId = $properties['head_block_number'] - 2;
@@ -103,17 +87,10 @@ class Transaction
                     ]]
                 );
             }
-        }
 
         if (!($tx instanceof CommandQueryDataInterface)) {
             throw new \Exception('cant init Tx');
         }
-//        $properties2 = [
-//            'ref_block_num'    => '25851',
-//            'ref_block_prefix' => '677597376',
-//            'expiration'       => '2017-12-06T15:30:00.000',
-//        ];
-//        echo '<pre>' . var_dump($tx->getParams(), $properties2) . '<pre>'; //FIXME delete it
 
         return $tx;
     }
@@ -131,15 +108,6 @@ class Transaction
         $trxParams = $trxData->getParams();
         $serBuffer = OperationSerializer::serializeTransaction($trxParams, new ByteBuffer());
         $serializedTx = self::getChainId($chainName) . bin2hex($serBuffer->read(0, $serBuffer->length()));
-
-//                echo "\n" . var_dump(
-//                '$serializedTx'
-//            ); //FIXME delete it
-//        echo "\n" . var_dump(
-//                $serializedTx,
-//                '0000000000000000000000000000000000000000000000000000000000000000fb64c0506328f80c285a01000867756573743132330966697265706f77657254737465656d69742d76656e692d766964692d766963692d737465656d666573742d323031362d746f6765746865722d77652d6d6164652d69742d68617070656e2d7468616e6b2d796f752d737465656d69616e73102700',
-//                $serializedTx === '0000000000000000000000000000000000000000000000000000000000000000fb64c0506328f80c285a01000867756573743132330966697265706f77657254737465656d69742d76656e692d766964692d766963692d737465656d666573742d323031362d746f6765746865722d77652d6d6164652d69742d68617070656e2d7468616e6b2d796f752d737465656d69616e73102700'
-//            ); //FIXME delete it
 
         return $serializedTx;
     }
