@@ -19,7 +19,7 @@ abstract class WSConnectorAbstract implements ConnectorInterface
      *
      * @var string|array
      */
-    protected $nodeURL;
+    protected static $nodeURL;
 
     /**
      * current node url, for example 'wss://ws.golos.io'
@@ -32,9 +32,12 @@ abstract class WSConnectorAbstract implements ConnectorInterface
     /**
      * current node url, for example 'wss://ws.golos.io'
      *
+     * if you set several nodes urls, if with first node will be trouble
+     * it will connect after $maxNumberOfTriesToCallApi tries to next node
+     *
      * @var string
      */
-    private $currentNodeURL;
+    protected static $currentNodeURL;
 
     /**
      * waiting answer from Node during $wsTimeoutSeconds seconds
@@ -52,6 +55,69 @@ abstract class WSConnectorAbstract implements ConnectorInterface
 
     protected static $connection;
     protected static $currentId;
+
+    /**
+     * WSConnectorAbstract constructor.
+     *
+     * @param int $orderNodesByTimeout skip this checks when it is 0.
+     *                                   do not set it is too low, if node do not answer it go out from list
+     *
+     * @throws \WebSocket\BadOpcodeException
+     */
+    public function __construct($orderNodesByTimeout = 0) {
+
+        if ($orderNodesByTimeout > 0 && is_array(static::$nodeURL) && count(static::$nodeURL) > 1) {
+            $this->orderNodesByTimeout($orderNodesByTimeout);
+        }
+    }
+
+
+    /**
+     * @param integer $orderNodesByTimeout Only if you set few nodes. do not set it is too low, if node do not answer it go out from list
+     *
+     *
+     * @throws \WebSocket\BadOpcodeException
+     */
+    public function orderNodesByTimeout($orderNodesByTimeout)
+    {
+        $requestId = $this->getNextId();
+        $requestData = [
+            'jsonrpc' => '2.0',
+            'id'      => $requestId,
+            'method'  => 'call',
+            'params'  => [
+                'database_api',
+                'get_dynamic_global_properties',
+                []
+            ]
+        ];
+        $wsTimeoutSeconds = $this->wsTimeoutSeconds;
+        $this->wsTimeoutSeconds = $orderNodesByTimeout;
+        $timeouts = [];
+        foreach (static::$nodeURL as $currentNodeURL) {
+            try {
+                $connection = $this->newConnection($currentNodeURL);
+
+                $startMTime = microtime(true);
+                $connection->send(json_encode($requestData, JSON_UNESCAPED_UNICODE));
+                $answerRaw = $connection->receive();
+                $timeout = $requestTimeout = microtime(true) - $startMTime;
+
+                $connection->close();
+                $answer = json_decode($answerRaw, self::ANSWER_FORMAT_ARRAY);
+
+                if (isset($answer['error'])) {
+                    throw new ConnectionException('got error in answer: ' . $answer['error']['code'] . ' ' . $answer['error']['message']);
+                }
+                $timeouts[$currentNodeURL] = round($timeout, 4);
+            } catch (ConnectionException $e) {
+            }
+        }
+        static::$connection = null;
+        $this->wsTimeoutSeconds = $wsTimeoutSeconds;
+        asort($timeouts);
+        static::$nodeURL = array_keys($timeouts);
+    }
 
     /**
      * @return Client|null
@@ -79,18 +145,18 @@ abstract class WSConnectorAbstract implements ConnectorInterface
 
     public function getCurrentUrl()
     {
-        if ($this->currentNodeURL === null) {
-            if (is_array($this->nodeURL)) {
-                $this->reserveNodeUrlList = $this->nodeURL;
+        if (static::$currentNodeURL === null) {
+            if (is_array(static::$nodeURL)) {
+                $this->reserveNodeUrlList = static::$nodeURL;
                 $url = array_shift($this->reserveNodeUrlList);
             } else {
-                $url = $this->nodeURL;
+                $url = static::$nodeURL;
             }
 
-            $this->currentNodeURL = $url;
+            static::$currentNodeURL = $url;
         }
 
-        return $this->currentNodeURL;
+        return static::$currentNodeURL;
     }
 
     public function isExistReserveNodeUrl()
@@ -100,11 +166,13 @@ abstract class WSConnectorAbstract implements ConnectorInterface
 
     protected function setReserveNodeUrlToCurrentUrl()
     {
-        $this->currentNodeURL = array_shift($this->reserveNodeUrlList);
+        static::$currentNodeURL = array_shift($this->reserveNodeUrlList);
     }
 
     public function connectToReserveNode()
     {
+        $connection = $this->getConnection();
+        $connection->close();
         $this->setReserveNodeUrlToCurrentUrl();
         return $this->newConnection($this->getCurrentUrl());
     }
@@ -149,7 +217,8 @@ abstract class WSConnectorAbstract implements ConnectorInterface
     public function doRequest($apiName, array $data, $answerFormat = self::ANSWER_FORMAT_ARRAY, $try_number = 1)
     {
         $requestId = $this->getNextId();
-        $data = [
+        $requestData = [
+            'jsonrpc' => '2.0',
             'id'     => $requestId,
             'method' => 'call',
             'params' => [
@@ -160,11 +229,16 @@ abstract class WSConnectorAbstract implements ConnectorInterface
         ];
         try {
             $connection = $this->getConnection();
-            $connection->send(json_encode($data));
-
+            $connection->send(json_encode($requestData, JSON_UNESCAPED_UNICODE));
             $answerRaw = $connection->receive();
             $answer = json_decode($answerRaw, self::ANSWER_FORMAT_ARRAY === $answerFormat);
 
+            if (
+                (self::ANSWER_FORMAT_ARRAY === $answerFormat && isset($answer['error']))
+                || (self::ANSWER_FORMAT_OBJECT === $answerFormat && isset($answer->error))
+            ) {
+                throw new ConnectionException('got error in answer: ' . $answer['error']['code'] . ' ' . $answer['error']['message']);
+            }
             //check that answer has the same id or id from previous tries, else it is answer from other request
             if (self::ANSWER_FORMAT_ARRAY === $answerFormat) {
                 $answerId = $answer['id'];
@@ -172,7 +246,7 @@ abstract class WSConnectorAbstract implements ConnectorInterface
                 $answerId = $answer->id;
             }
             if ($requestId - $answerId > ($try_number - 1)) {
-                throw new ConnectionException('get answer from old request');
+                throw new ConnectionException('got answer from old request');
             }
 
 

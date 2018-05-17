@@ -2,8 +2,8 @@
 
 namespace GolosPHP\Tools\ChainOperations;
 
-use GolosPHP\Commands\Broadcast\BroadcastTransactionCommand;
-use GolosPHP\Commands\Broadcast\BroadcastTransactionSynchronousCommand;
+use GolosPHP\Commands\Single\BroadcastTransactionCommand;
+use GolosPHP\Commands\Single\BroadcastTransactionSynchronousCommand;
 use GolosPHP\Commands\CommandQueryData;
 use GolosPHP\Connectors\ConnectorInterface;
 use GolosPHP\Tools\Transaction;

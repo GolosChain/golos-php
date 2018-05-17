@@ -2,8 +2,8 @@
 
 namespace GolosPHP\Tools\ChainOperations;
 
-use GolosPHP\Commands\Broadcast\BroadcastTransactionCommand;
-use GolosPHP\Commands\Broadcast\BroadcastTransactionSynchronousCommand;
+use GolosPHP\Commands\Single\BroadcastTransactionCommand;
+use GolosPHP\Commands\Single\BroadcastTransactionSynchronousCommand;
 use GolosPHP\Commands\CommandQueryData;
 use GolosPHP\Connectors\ConnectorInterface;
 use GolosPHP\Tools\Auth;
@@ -42,7 +42,7 @@ class OpVote
 
         $command = new BroadcastTransactionCommand($connector);////        echo '<pre>' . var_dump($commandQueryData->getParams(), $properties2) . '<pre>'; die; //FIXME delete it
         Transaction::sign($chainName, $tx, ['posting' => $publicWif]);
-//        echo '<pre>' . var_dump($tx->getParams()) . '<pre>'; //FIXME delete it
+
         $answer = $command->execute(
             $tx
         );

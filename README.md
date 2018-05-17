@@ -26,7 +26,8 @@ install extensions
 <?php
 
 use GolosPHP\Commands\CommandQueryData;
-use GolosPHP\Commands\DataBase\GetDiscussionsByCreatedCommand;
+use GolosPHP\Commands\Commands;
+use GolosPHP\Commands\Single\GetDiscussionsByCreatedCommand;
 use GolosPHP\Connectors\WebSocket\GolosWSConnector;
 use GolosPHP\Connectors\WebSocket\SteemitWSConnector;
 
@@ -48,10 +49,21 @@ $commandQuery->setParamByKey('0:limit', $limit);
 $commandQuery->setParamByKey('0:select_tags', [$tag]);
 $commandQuery->setParamByKey('0:tag', $tag);
 
+
+//and use single command
 $command = new GetDiscussionsByCreatedCommand(new GolosWSConnector());
 $golosPosts = $command->execute(
     $commandQuery
 );
+
+//or commands aggregator class
+$commands = new Commands(new GolosWSConnector());
+$golosPosts = $commands->get_discussions_by_created()
+    ->execute(
+       $commandQuery
+);
+
+
 // will return
 // [
 //      "id" => 1,
@@ -66,12 +78,25 @@ $golosPosts = $command->execute(
 //      ]
 // ]
   
+  
+//single command  
 $command = new GetDiscussionsByCreatedCommand(new SteemitWSConnector());
 $steemitPosts = $command->execute(
     $commandQuery,
     'result',
     SteemitWSConnector::ANSWER_FORMAT_ARRAY // or SteemitWSConnector::ANSWER_FORMAT_OBJECT
 );
+
+//or commands aggregator class
+$commands = new Commands(new GolosWSConnector());
+$golosPosts = $commands->get_discussions_by_created()
+    ->execute(
+        $commandQuery,
+        'result',
+        SteemitWSConnector::ANSWER_FORMAT_ARRAY // or SteemitWSConnector::ANSWER_FORMAT_OBJECT
+);
+
+
 // will return
 // [
 //      [
@@ -90,45 +115,41 @@ $steemitPosts = $command->execute(
 
 ## Implemented Commands List
 
-namespace: 
-- GolosPHP\Commands\Broadcast;
-- GolosPHP\Commands\DataBase;
-- GolosPHP\Commands\Follow;
-- GolosPHP\Commands\Login;
-
-### database_api
-- GetDynamicGlobalPropertiesCommand
-- GetBlockCommand
-- GetBlockHeaderCommand
-- GetWitnessesByVoteCommand
-- GetActiveWitnessesCommand
-- GetAccountCommand
+### Single Commands
+- BroadcastTransactionCommand
+- BroadcastTransactionSynchronousCommand
 - GetAccountCountCommand
 - GetAccountHistoryCommand
+- GetAccountsCommand
 - GetAccountVotesCommand
+- GetActiveWitnessesCommand
+- GetApiByNameCommand //ONLY STEEM
+- GetBlockCommand
+- GetBlockHeaderCommand
+- GetConfigCommand
 - GetContentCommand
+- GetContentRepliesCommand
+- GetCurrentMedianHistoryPriceCommand
 - GetDiscussionsByAuthorBeforeDateCommand
 - GetDiscussionsByBlogCommand
 - GetDiscussionsByCreatedCommand
 - GetDiscussionsByFeedCommand
 - GetDiscussionsByTrendingCommand
-- GetTrendingCategoriesCommand
-  
-### login_api
-- GetApiByNameCommand
-- GetVersionCommand
-- LoginCommand
-   
-  
-### follow_api
+- GetDynamicGlobalPropertiesCommand
 - GetFollowersCommand
-   
-  
-### broadcast_api
-- BroadcastTransactionCommand
-- BroadcastTransactionSynchronousCommand
+- GetOpsInBlock
+- GetTrendingCategoriesCommand
+- GetVersionCommand
+- GetWitnessesByVoteCommand
+- LoginCommand //ONLY STEEM
 
-### broadcast_api operations templates
+All single commands can be called through Commands Class as methods (example: (new Commands)->get_block()->execute(...) )
+
+
+### broadcast operations templates
+
+namespace GolosPHP\Tools\ChainOperations
+
 - vote
 - transfer
 - comment 
@@ -170,17 +191,21 @@ $answer = OpVote::doSynchronous(
 
 ## Implemented Connectors List
 
-namespace: GolosPHP\Connectors\WebSocket;
+namespace: GolosPHP\Connectors\WebSocket OR GolosPHP\Connectors\Http;
 
 - GolosWSConnector (wss://ws.golos.io)
-- SteemitWSConnector (wss://ws.steemit.com)
+- SteemitWSConnector (wss://steemd.minnowsupportproject.org)
+- SteemitHttpConnector (https://steemd.privex.io)
 
-switch between connectors 
+List of available STEEM nodes are [here](https://www.steem.center/index.php?title=Public_Websocket_Servers)
+
+
+#### Switching between connectors 
 ```php
 <?php
 
 use GolosPHP\Commands\CommandQueryData;
-use GolosPHP\Commands\DataBase\GetContentCommand;
+use GolosPHP\Commands\Single\GetContentCommand;
 use GolosPHP\Connectors\InitConnector;
 
 $command = new GetContentCommand(InitConnector::getConnector(InitConnector::PLATFORM_STEEMIT));
@@ -253,7 +278,7 @@ Or use GolosPHP\Connectors\WebSocket\WSConnectorAbstract for extending
 
 namespace My\App\Commands;
 
-use GolosPHP\Commands\DataBase\CommandAbstract;
+use GolosPHP\Commands\Single\CommandAbstract;
 use GolosPHP\Connectors\ConnectorInterface;
 
 class GolosWSConnector extends WSConnectorAbstract
@@ -262,6 +287,13 @@ class GolosWSConnector extends WSConnectorAbstract
      * @var string
      */
     protected $platform = self::PLATFORM_GOLOS;
+
+    /**
+     * waiting answer from Node during $wsTimeoutSeconds seconds
+     *
+     * @var int
+     */
+    protected $wsTimeoutSeconds = 5;
 
     /**
      * max number of tries to get answer from the node
@@ -292,7 +324,7 @@ class GolosWSConnector extends WSConnectorAbstract
 
 namespace My\App\Commands;
 
-use GolosPHP\Commands\DataBase\CommandAbstract;
+use GolosPHP\Commands\Single\CommandAbstract;
 use GolosPHP\Connectors\ConnectorInterface;
 
 class MyCommand extends CommandAbstract 
